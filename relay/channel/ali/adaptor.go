@@ -125,6 +125,25 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 
 func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Header, info *relaycommon.RelayInfo) error {
 	channel.SetupApiRequestHeader(info, c, req)
+
+	// Check if using qwen-coding-plan with Claude format - needs special headers
+	baseURL := info.ChannelBaseUrl
+	if _, ok := channelconstant.ChannelSpecialBases[baseURL]; ok && info.RelayFormat == types.RelayFormatClaude {
+		// Use Claude-compatible headers for Aliyun Coding Plan Claude endpoint
+		req.Set("x-api-key", info.ApiKey)
+		anthropicVersion := c.Request.Header.Get("anthropic-version")
+		if anthropicVersion == "" {
+			anthropicVersion = "2023-06-01"
+		}
+		req.Set("anthropic-version", anthropicVersion)
+		// Copy anthropic-beta header if present
+		anthropicBeta := c.Request.Header.Get("anthropic-beta")
+		if anthropicBeta != "" {
+			req.Set("anthropic-beta", anthropicBeta)
+		}
+		return nil
+	}
+
 	req.Set("Authorization", "Bearer "+info.ApiKey)
 	if info.IsStream {
 		req.Set("X-DashScope-SSE", "enable")
