@@ -53,6 +53,11 @@ func (a *Adaptor) ConvertGeminiRequest(*gin.Context, *relaycommon.RelayInfo, *dt
 }
 
 func (a *Adaptor) ConvertClaudeRequest(c *gin.Context, info *relaycommon.RelayInfo, req *dto.ClaudeRequest) (any, error) {
+	// Check if using qwen-coding-plan - for special plan Claude endpoint, pass through directly
+	if _, ok := channelconstant.ChannelSpecialBases[info.ChannelBaseUrl]; ok {
+		return req, nil
+	}
+
 	if supportsAliAnthropicMessages(info.UpstreamModelName) {
 		return req, nil
 	}
