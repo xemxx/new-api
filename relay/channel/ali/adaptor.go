@@ -259,6 +259,11 @@ func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, request
 func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (usage any, err *types.NewAPIError) {
 	switch info.RelayFormat {
 	case types.RelayFormatClaude:
+		// Check if using qwen-coding-plan special base URL
+		if _, ok := channelconstant.ChannelSpecialBases[info.ChannelBaseUrl]; ok {
+			adaptor := claude.Adaptor{}
+			return adaptor.DoResponse(c, resp, info)
+		}
 		if supportsAliAnthropicMessages(info.UpstreamModelName) {
 			adaptor := claude.Adaptor{}
 			return adaptor.DoResponse(c, resp, info)
